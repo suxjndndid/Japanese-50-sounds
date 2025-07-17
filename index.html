@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>日语五十音记忆</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --dark-bg: #1f2937;
+      --dark-card-bg: #374151;
+      --dark-shadow-light: #4b5563;
+      --dark-shadow-dark: #111827;
+      --dark-text: #f3f4f6;
+      --dark-text-secondary: #d1d5db;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+      color: var(--dark-text);
+    }
+    
+    .clay-card {
+      background: var(--dark-card-bg);
+      box-shadow: 9px 9px 16px var(--dark-shadow-dark),
+                  -9px -9px 16px var(--dark-shadow-light);
+      border-radius: 1rem;
+      color: var(--dark-text);
+      border: 1px solid #4b5563;
+    }
+    
+    .mode-btn {
+      padding: 0.5rem 1rem;
+      border-radius: 0.75rem;
+      font-weight: 600;
+      box-shadow: 4px 4px 8px var(--dark-shadow-dark),
+                  -4px -4px 8px var(--dark-shadow-light);
+      border: none;
+      background-color: var(--dark-card-bg);
+      color: var(--dark-text);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-width: 80px;
+      text-align: center;
+    }
+    
+    .mode-btn:hover {
+      background-color: #4338ca;
+      color: white;
+      box-shadow: 6px 6px 12px var(--dark-shadow-dark),
+                  -6px -6px 12px var(--dark-shadow-light);
+      transform: translateY(-1px);
+    }
+    
+    .mode-btn.active {
+      background-color: #3730a3;
+      color: white;
+      box-shadow: inset 4px 4px 8px var(--dark-shadow-dark),
+                  inset -4px -4px 8px var(--dark-shadow-light);
+      transform: translateY(1px);
+    }
+    
+    .btn-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+      justify-content: flex-start;
+    }
+    
+    .action-btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.75rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 4px 4px 8px var(--dark-shadow-dark),
+                  -4px -4px 8px var(--dark-shadow-light);
+    }
+    
+    .action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 6px 6px 12px var(--dark-shadow-dark),
+                  -6px -6px 12px var(--dark-shadow-light);
+    }
+    
+    .action-btn:active {
+      transform: translateY(0);
+      box-shadow: 2px 2px 4px var(--dark-shadow-dark),
+                  -2px -2px 4px var(--dark-shadow-light);
+    }
+    
+    .btn-blue {
+      background-color: #2563eb;
+      color: white;
+    }
+    
+    .btn-green {
+      background-color: #059669;
+      color: white;
+    }
+    
+    #romaji {
+      color: var(--dark-text-secondary);
+    }
+    
+    .container {
+      background: var(--dark-card-bg);
+      border-radius: 1.5rem;
+      box-shadow: 12px 12px 24px var(--dark-shadow-dark),
+                  -12px -12px 24px var(--dark-shadow-light);
+      border: 1px solid #4b5563;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex flex-col items-center justify-center transition-all duration-300" id="app">
+  <div class="w-full max-w-md p-6 container">
+    <h1 class="text-2xl font-bold text-center mb-6 text-gray-100">日语五十音记忆</h1>
+    
+    <div class="btn-group">
+      <button onclick="setMode('hiragana')" class="mode-btn" id="btn-mode-hiragana">平假名</button>
+      <button onclick="setMode('katakana')" class="mode-btn" id="btn-mode-katakana">片假名</button>
+      <button onclick="setMode('mixed')" class="mode-btn" id="btn-mode-mixed">混合</button>
+      <button onclick="setMode('both')" class="mode-btn" id="btn-mode-both">对照</button>
+    </div>
+
+    <div class="btn-group">
+      <button onclick="setStudyMode('learn')" class="mode-btn" id="btn-study-learn">学习</button>
+      <button onclick="setStudyMode('recall')" class="mode-btn" id="btn-study-recall">联想</button>
+    </div>
+
+    <div class="btn-group">
+      <button onclick="setOrderMode('random')" class="mode-btn" id="btn-order-random">随机</button>
+      <button onclick="setOrderMode('sequential')" class="mode-btn" id="btn-order-sequential">顺序</button>
+      <button onclick="setOrderMode('row')" class="mode-btn" id="btn-order-row">按行</button>
+      <button onclick="setOrderMode('column')" class="mode-btn" id="btn-order-column">按列</button>
+    </div>
+
+    <div class="btn-group" id="row-selection" style="display: none;">
+      <button onclick="selectRow(0)" class="mode-btn" id="btn-row-0">あ段</button>
+      <button onclick="selectRow(1)" class="mode-btn" id="btn-row-1">い段</button>
+      <button onclick="selectRow(2)" class="mode-btn" id="btn-row-2">う段</button>
+      <button onclick="selectRow(3)" class="mode-btn" id="btn-row-3">え段</button>
+      <button onclick="selectRow(4)" class="mode-btn" id="btn-row-4">お段</button>
+    </div>
+
+    <div class="btn-group" id="column-selection" style="display: none;">
+      <button onclick="selectColumn(0)" class="mode-btn" id="btn-col-0">あ行</button>
+      <button onclick="selectColumn(1)" class="mode-btn" id="btn-col-1">か行</button>
+      <button onclick="selectColumn(2)" class="mode-btn" id="btn-col-2">さ行</button>
+      <button onclick="selectColumn(3)" class="mode-btn" id="btn-col-3">た行</button>
+      <button onclick="selectColumn(4)" class="mode-btn" id="btn-col-4">な行</button>
+      <button onclick="selectColumn(5)" class="mode-btn" id="btn-col-5">は行</button>
+      <button onclick="selectColumn(6)" class="mode-btn" id="btn-col-6">ま行</button>
+      <button onclick="selectColumn(7)" class="mode-btn" id="btn-col-7">や行</button>
+      <button onclick="selectColumn(8)" class="mode-btn" id="btn-col-8">ら行</button>
+      <button onclick="selectColumn(9)" class="mode-btn" id="btn-col-9">わ行</button>
+    </div>
+
+    <div class="btn-group">
+      <button onclick="toggleDakuten()" class="mode-btn" id="btn-dakuten">启用浊音</button>
+    </div>
+
+    <div id="card" class="clay-card p-10 mb-4 text-center text-6xl font-bold rounded-2xl">
+      あ
+    </div>
+
+    <div id="romaji" class="text-center text-2xl mb-4"></div>
+
+    <div class="flex justify-center space-x-4">
+      <button onclick="revealRomaji()" class="action-btn btn-blue">显示罗马音</button>
+      <button onclick="nextKana()" class="action-btn btn-green">下一题</button>
+    </div>
+  </div>
+
+  <script>
+    const kanaData = [
+      { h: 'あ', k: 'ア', r: 'a', row: 0, col: 0 }, { h: 'い', k: 'イ', r: 'i', row: 0, col: 1 }, { h: 'う', k: 'ウ', r: 'u', row: 0, col: 2 }, { h: 'え', k: 'エ', r: 'e', row: 0, col: 3 }, { h: 'お', k: 'オ', r: 'o', row: 0, col: 4 },
+      { h: 'か', k: 'カ', r: 'ka', row: 1, col: 0 }, { h: 'き', k: 'キ', r: 'ki', row: 1, col: 1 }, { h: 'く', k: 'ク', r: 'ku', row: 1, col: 2 }, { h: 'け', k: 'ケ', r: 'ke', row: 1, col: 3 }, { h: 'こ', k: 'コ', r: 'ko', row: 1, col: 4 },
+      { h: 'さ', k: 'サ', r: 'sa', row: 2, col: 0 }, { h: 'し', k: 'シ', r: 'shi', row: 2, col: 1 }, { h: 'す', k: 'ス', r: 'su', row: 2, col: 2 }, { h: 'せ', k: 'セ', r: 'se', row: 2, col: 3 }, { h: 'そ', k: 'ソ', r: 'so', row: 2, col: 4 },
+      { h: 'た', k: 'タ', r: 'ta', row: 3, col: 0 }, { h: 'ち', k: 'チ', r: 'chi', row: 3, col: 1 }, { h: 'つ', k: 'ツ', r: 'tsu', row: 3, col: 2 }, { h: 'て', k: 'テ', r: 'te', row: 3, col: 3 }, { h: 'と', k: 'ト', r: 'to', row: 3, col: 4 },
+      { h: 'な', k: 'ナ', r: 'na', row: 4, col: 0 }, { h: 'に', k: 'ニ', r: 'ni', row: 4, col: 1 }, { h: 'ぬ', k: 'ヌ', r: 'nu', row: 4, col: 2 }, { h: 'ね', k: 'ネ', r: 'ne', row: 4, col: 3 }, { h: 'の', k: 'ノ', r: 'no', row: 4, col: 4 },
+      { h: 'は', k: 'ハ', r: 'ha', row: 5, col: 0 }, { h: 'ひ', k: 'ヒ', r: 'hi', row: 5, col: 1 }, { h: 'ふ', k: 'フ', r: 'fu', row: 5, col: 2 }, { h: 'へ', k: 'ヘ', r: 'he', row: 5, col: 3 }, { h: 'ほ', k: 'ホ', r: 'ho', row: 5, col: 4 },
+      { h: 'ま', k: 'マ', r: 'ma', row: 6, col: 0 }, { h: 'み', k: 'ミ', r: 'mi', row: 6, col: 1 }, { h: 'む', k: 'ム', r: 'mu', row: 6, col: 2 }, { h: 'め', k: 'メ', r: 'me', row: 6, col: 3 }, { h: 'も', k: 'モ', r: 'mo', row: 6, col: 4 },
+      { h: 'や', k: 'ヤ', r: 'ya', row: 7, col: 0 }, { h: 'ゆ', k: 'ユ', r: 'yu', row: 7, col: 2 }, { h: 'よ', k: 'ヨ', r: 'yo', row: 7, col: 4 },
+      { h: 'ら', k: 'ラ', r: 'ra', row: 8, col: 0 }, { h: 'り', k: 'リ', r: 'ri', row: 8, col: 1 }, { h: 'る', k: 'ル', r: 'ru', row: 8, col: 2 }, { h: 'れ', k: 'レ', r: 're', row: 8, col: 3 }, { h: 'ろ', k: 'ロ', r: 'ro', row: 8, col: 4 },
+      { h: 'わ', k: 'ワ', r: 'wa', row: 9, col: 0 }, { h: 'を', k: 'ヲ', r: 'wo', row: 9, col: 4 },
+      { h: 'ん', k: 'ン', r: 'n', row: 10, col: 2 },
+      // 浊音
+      { h: 'が', k: 'ガ', r: 'ga', row: 1, col: 0, dakuten: true }, { h: 'ぎ', k: 'ギ', r: 'gi', row: 1, col: 1, dakuten: true }, { h: 'ぐ', k: 'グ', r: 'gu', row: 1, col: 2, dakuten: true }, { h: 'げ', k: 'ゲ', r: 'ge', row: 1, col: 3, dakuten: true }, { h: 'ご', k: 'ゴ', r: 'go', row: 1, col: 4, dakuten: true },
+      { h: 'ざ', k: 'ザ', r: 'za', row: 2, col: 0, dakuten: true }, { h: 'じ', k: 'ジ', r: 'ji', row: 2, col: 1, dakuten: true }, { h: 'ず', k: 'ズ', r: 'zu', row: 2, col: 2, dakuten: true }, { h: 'ぜ', k: 'ゼ', r: 'ze', row: 2, col: 3, dakuten: true }, { h: 'ぞ', k: 'ゾ', r: 'zo', row: 2, col: 4, dakuten: true },
+      { h: 'だ', k: 'ダ', r: 'da', row: 3, col: 0, dakuten: true }, { h: 'ぢ', k: 'ヂ', r: 'ji', row: 3, col: 1, dakuten: true }, { h: 'づ', k: 'ヅ', r: 'zu', row: 3, col: 2, dakuten: true }, { h: 'で', k: 'デ', r: 'de', row: 3, col: 3, dakuten: true }, { h: 'ど', k: 'ド', r: 'do', row: 3, col: 4, dakuten: true },
+      { h: 'ば', k: 'バ', r: 'ba', row: 5, col: 0, dakuten: true }, { h: 'び', k: 'ビ', r: 'bi', row: 5, col: 1, dakuten: true }, { h: 'ぶ', k: 'ブ', r: 'bu', row: 5, col: 2, dakuten: true }, { h: 'べ', k: 'ベ', r: 'be', row: 5, col: 3, dakuten: true }, { h: 'ぼ', k: 'ボ', r: 'bo', row: 5, col: 4, dakuten: true },
+      { h: 'ぱ', k: 'パ', r: 'pa', row: 5, col: 0, dakuten: true }, { h: 'ぴ', k: 'ピ', r: 'pi', row: 5, col: 1, dakuten: true }, { h: 'ぷ', k: 'プ', r: 'pu', row: 5, col: 2, dakuten: true }, { h: 'ぺ', k: 'ペ', r: 'pe', row: 5, col: 3, dakuten: true }, { h: 'ぽ', k: 'ポ', r: 'po', row: 5, col: 4, dakuten: true },
+    ];
+
+    let mode = 'hiragana';
+    let studyMode = 'learn';
+    let orderMode = 'random';
+    let showDakuten = false;
+    let current = null;
+    let selectedRow = null;
+    let selectedColumn = null;
+    let sequentialIndex = 0;
+
+    function highlightButtons() {
+      ['hiragana', 'katakana', 'mixed', 'both'].forEach((m) => {
+        document.getElementById('btn-mode-' + m).classList.toggle('active', mode === m);
+      });
+      ['learn', 'recall'].forEach((m) => {
+        document.getElementById('btn-study-' + m).classList.toggle('active', studyMode === m);
+      });
+      ['random', 'sequential', 'row', 'column'].forEach((m) => {
+        document.getElementById('btn-order-' + m).classList.toggle('active', orderMode === m);
+      });
+      document.getElementById('btn-dakuten').classList.toggle('active', showDakuten);
+      
+      for (let i = 0; i < 5; i++) {
+        const btn = document.getElementById('btn-row-' + i);
+        if (btn) btn.classList.toggle('active', selectedRow === i);
+      }
+      for (let i = 0; i < 10; i++) {
+        const btn = document.getElementById('btn-col-' + i);
+        if (btn) btn.classList.toggle('active', selectedColumn === i);
+      }
+    }
+
+    function setMode(m) {
+      mode = m;
+      highlightButtons();
+      nextKana();
+    }
+
+    function setStudyMode(m) {
+      studyMode = m;
+      highlightButtons();
+      document.getElementById('romaji').textContent = '';
+    }
+
+    function setOrderMode(m) {
+      orderMode = m;
+      selectedRow = null;
+      selectedColumn = null;
+      sequentialIndex = 0;
+      
+      document.getElementById('row-selection').style.display = m === 'row' ? 'flex' : 'none';
+      document.getElementById('column-selection').style.display = m === 'column' ? 'flex' : 'none';
+      
+      highlightButtons();
+      nextKana();
+    }
+
+    function selectRow(row) {
+      selectedRow = row;
+      highlightButtons();
+      nextKana();
+    }
+
+    function selectColumn(col) {
+      selectedColumn = col;
+      highlightButtons();
+      nextKana();
+    }
+
+    function toggleDakuten() {
+      showDakuten = !showDakuten;
+      sequentialIndex = 0;
+      highlightButtons();
+      nextKana();
+    }
+
+    function getFilteredKana() {
+      let list = kanaData.filter(k => showDakuten || !k.dakuten);
+      
+      if (orderMode === 'row' && selectedRow !== null) {
+        list = list.filter(k => k.row === selectedRow);
+      }
+      
+      if (orderMode === 'column' && selectedColumn !== null) {
+        list = list.filter(k => k.col === selectedColumn);
+      }
+      
+      return list;
+    }
+
+    function nextKana() {
+      const list = getFilteredKana();
+      if (list.length === 0) return;
+      
+      if (orderMode === 'sequential') {
+        list.sort((a, b) => a.row - b.row || a.col - b.col);
+        current = list[sequentialIndex % list.length];
+        sequentialIndex++;
+      } else if (orderMode === 'row' && selectedRow === null) {
+        list.sort((a, b) => a.row - b.row || a.col - b.col);
+        current = list[Math.floor(Math.random() * list.length)];
+      } else if (orderMode === 'column' && selectedColumn === null) {
+        list.sort((a, b) => a.col - b.col || a.row - b.row);
+        current = list[Math.floor(Math.random() * list.length)];
+      } else {
+        current = list[Math.floor(Math.random() * list.length)];
+      }
+
+      let text = '';
+      if (mode === 'hiragana') text = current.h;
+      else if (mode === 'katakana') text = current.k;
+      else if (mode === 'both') text = `${current.h} / ${current.k}`;
+      else if (mode === 'mixed') text = Math.random() > 0.5 ? current.h : current.k;
+
+      document.getElementById('card').textContent = text;
+      document.getElementById('romaji').textContent = studyMode === 'learn' ? current.r : '';
+    }
+
+    function revealRomaji() {
+      if (current) document.getElementById('romaji').textContent = current.r;
+    }
+
+    highlightButtons();
+    nextKana();
+  </script>
+</body>
+
+</html>
