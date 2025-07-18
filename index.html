@@ -205,16 +205,37 @@
     let selectedRow = null;
     let selectedColumn = null;
     let sequentialIndex = 0;
+    let randomSeed = 1;
+    let shuffledList = [];
+
+    // 简单的伪随机数生成器
+    function seededRandom() {
+      randomSeed = (randomSeed * 9301 + 49297) % 233280;
+      return randomSeed / 233280;
+    }
+
+    // 使用种子随机打乱数组
+    function shuffleArray(array, seed) {
+      randomSeed = seed;
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(seededRandom() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
 
     function highlightButtons() {
-      ['hiragana', 'katakana', 'mixed', 'both'].forEach((m) => {
-        document.getElementById('btn-mode-' + m).classList.toggle('active', mode === m);
+      document.querySelectorAll('.mode-btn').forEach(btn => {
+        btn.classList.toggle('active', false);
       });
-      ['learn', 'recall'].forEach((m) => {
-        document.getElementById('btn-study-' + m).classList.toggle('active', studyMode === m);
+      document.querySelectorAll('.mode-btn').forEach(btn => {
+        const m = btn.id.replace('btn-mode-', '');
+        btn.classList.toggle('active', mode === m);
       });
-      ['random', 'sequential', 'row', 'column'].forEach((m) => {
-        document.getElementById('btn-order-' + m).classList.toggle('active', orderMode === m);
+      document.querySelectorAll('.mode-btn').forEach(btn => {
+        const m = btn.id.replace('btn-study-', '');
+        btn.classList.toggle('active', studyMode === m);
       });
       document.getElementById('btn-dakuten').classList.toggle('active', showDakuten);
       
@@ -224,7 +245,7 @@
       }
       for (let i = 0; i < 10; i++) {
         const btn = document.getElementById('btn-col-' + i);
-        if (btn) btn.classList.toggle('active', selectedColumn === i);
+        btn.classList.toggle('active', selectedColumn === i);
       }
     }
 
@@ -242,9 +263,14 @@
 
     function setOrderMode(m) {
       orderMode = m;
-      selectedRow = null;
-      selectedColumn = null;
       sequentialIndex = 0;
+      
+      // 切换到随机模式时生成新的伪随机序列
+      if (m === 'random') {
+        const currentTime = Date.now();
+        const list = getFilteredKana();
+        shuffledList = shuffleArray(list, currentTime);
+      }
       
       document.getElementById('row-selection').style.display = m === 'row' ? 'flex' : 'none';
       document.getElementById('column-selection').style.display = m === 'column' ? 'flex' : 'none';
@@ -255,12 +281,24 @@
 
     function selectRow(row) {
       selectedRow = row;
+      // 重新生成随机序列
+      if (orderMode === 'random') {
+        const list = getFilteredKana();
+        shuffledList = shuffleArray(list, Date.now());
+        sequentialIndex = 0;
+      }
       highlightButtons();
       nextKana();
     }
 
     function selectColumn(col) {
       selectedColumn = col;
+      // 重新生成随机序列
+      if (orderMode === 'random') {
+        const list = getFilteredKana();
+        shuffledList = shuffleArray(list, Date.now());
+        sequentialIndex = 0;
+      }
       highlightButtons();
       nextKana();
     }
@@ -268,18 +306,29 @@
     function toggleDakuten() {
       showDakuten = !showDakuten;
       sequentialIndex = 0;
+      // 重新生成随机序列
+      if (orderMode === 'random') {
+        const list = getFilteredKana();
+        shuffledList = shuffleArray(list, Date.now());
+      }
       highlightButtons();
       nextKana();
     }
 
     function getFilteredKana() {
-      let list = kanaData.filter(k => showDakuten || !k.dakuten);
+      let list = kanaData;
       
-      if (orderMode === 'row' && selectedRow !== null) {
+      if (showDakuten) {
+        list = list.filter(k => k.dakuten);
+      } else {
+        list = list.filter(k => !k.dakuten);
+      }
+      
+      if (selectedRow !== null) {
         list = list.filter(k => k.row === selectedRow);
       }
       
-      if (orderMode === 'column' && selectedColumn !== null) {
+      if (selectedColumn !== null) {
         list = list.filter(k => k.col === selectedColumn);
       }
       
@@ -291,17 +340,33 @@
       if (list.length === 0) return;
       
       if (orderMode === 'sequential') {
-        list.sort((a, b) => a.row - b.row || a.col - b.col);
+        list.sort((a, b) => {
+          if (a.row !== b.row) return a.row - b.row;
+          return a.col - b.col;
+        });
         current = list[sequentialIndex % list.length];
         sequentialIndex++;
-      } else if (orderMode === 'row' && selectedRow === null) {
-        list.sort((a, b) => a.row - b.row || a.col - b.col);
-        current = list[Math.floor(Math.random() * list.length)];
-      } else if (orderMode === 'column' && selectedColumn === null) {
-        list.sort((a, b) => a.col - b.col || a.row - b.row);
-        current = list[Math.floor(Math.random() * list.length)];
-      } else {
-        current = list[Math.floor(Math.random() * list.length)];
+      } else if (orderMode === 'random') {
+        // 使用预生成的伪随机序列
+        if (shuffledList.length === 0 || shuffledList.length !== list.length) {
+          shuffledList = shuffleArray(list, Date.now());
+        }
+        current = shuffledList[sequentialIndex % shuffledList.length];
+        sequentialIndex++;
+      } else if (orderMode === 'row') {
+        if (selectedRow !== null) {
+          const rowList = list.filter(k => k.row === selectedRow);
+          current = rowList[Math.floor(Math.random() * rowList.length)];
+        } else {
+          current = list[Math.floor(Math.random() * list.length)];
+        }
+      } else if (orderMode === 'column') {
+        if (selectedColumn !== null) {
+          const colList = list.filter(k => k.col === selectedColumn);
+          current = colList[Math.floor(Math.random() * colList.length)];
+        } else {
+          current = list[Math.floor(Math.random() * list.length)];
+        }
       }
 
       let text = '';
@@ -316,10 +381,8 @@
 
     function revealRomaji() {
       if (current) document.getElementById('romaji').textContent = current.r;
-    }
-
-    highlightButtons();
-    nextKana();
+   }
+   highlitna();
   </script>
 </body>
 
